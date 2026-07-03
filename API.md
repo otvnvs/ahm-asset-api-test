@@ -115,21 +115,23 @@ This document lists all intercepted native endpoints available to the WebView ap
     ```
 
 ### `POST /api/fs/write`
-*   **Description:** Persists plain UTF-8 encoded text arguments into an explicitly targeted filesystem location.
+*   **Description:** Persists plain UTF-8 encoded text arguments into an explicitly targeted filesystem location. It leverages a fallback header-based streaming mechanism to bypass mobile webview body limitations and character truncation limits.
 *   **Query Parameters:**
-    *   `path` (Required) - Destination file path relative to root directory.
-    *   `content` (Optional) - URL-encoded string content to commit to the file.
-*   **Request Body:** None (relies entirely on URL query mapping parameters).
+    *   `path` (Required) - Destination file path relative to the root directory.
+*   **Request Body:** None. The file content buffer streams inside the transport header wrapper instead of a standard raw request body.
 *   **Response Status:**
     *   `200 OK` (Successfully saved to disk)
-    *   `500 Internal Server Error` (File persisting runtime layer failures)
-*   **Response Headers:** `Content-Type: text/plain`
+    *   `500 Internal Server Error` (File persisting runtime layer failures or empty body transmission packets)
+*   **Response Headers:** 
+    *   `X-Export-Data` (Required Inbound Transport Header) - Contains the URL-encoded string content to commit to the file on the device flash sectors.
+    *   `Content-Type: text/plain` (Outbound Response)
 *   **Response Body:**
     ```json
     {
       "status": "success"
     }
     ```
+
 
 ### `DELETE /api/fs/delete`
 *   **Description:** Purges file targets or directory trees cleanly. Rejects requests targeting the absolute sandbox directory system root for protection.

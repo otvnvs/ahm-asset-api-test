@@ -21,6 +21,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
+
+
   // Filter requests matching your Android Native API routes
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
@@ -88,6 +90,15 @@ self.addEventListener('fetch', (event) => {
             body: JSON.stringify({ id: 1, info: "Mocked Upstream Redirect via Service Worker" })
           });
         }
+
+	if (path === '/api/net/download') {
+	  return jsonResponse({
+	    status: "success",
+	    message: "Resource downloaded successfully via native pipeline.",
+	    local_path: params.get('path') || "Download/fallback.txt",
+	    file_size_bytes: 1024
+	  });
+	}
 
         return new Response('Mock Path Not Found', { status: 404 });
       })()
