@@ -73,7 +73,7 @@ export default async function runSuite(runner) {
 
     // --- STREAM OUT RESULTS METRICS VISUALLY ---
     expect.log(`=================================================`);
-    expect.log(`🚀 STRESS TEST RESULTS METRICS SUMMARY:`);
+    expect.log(` STRESS TEST RESULTS METRICS SUMMARY:`);
     expect.log(`  * Total Executed Loops : ${latencies.length}`);
     expect.log(`  * Successful Writes    : ${passedCount}`);
     expect.log(`  * Errogated Failures   : ${failedCount}`);
