@@ -1,55 +1,54 @@
-export const createTestRunner = (terminal) => {
+export const createTestRunner = (onLogEvent) => {
   let activeSuite = '';
   const summary = { total: 0, passed: 0, failed: 0, errors: [] };
 
-  const format = {
-    // Clean, emoji-free text headers and status characters
-    suite: (msg) => terminal.writeln(`\n\x1b[1;35m[Suite] ${msg}\x1b[0m`),
-    pass: (msg) => terminal.writeln(`  \x1b[32m[PASS]\x1b[0m ${msg}`),
-    fail: (msg) => terminal.writeln(`  \x1b[31m[FAIL]\x1b[0m ${msg}`),
-    info: (msg) => terminal.writeln(`    \x1b[33m(i) ${msg}\x1b[0m`),
-    summary: () => {
-      terminal.writeln('\n\x1b[1;36mEXECUTION COMPLETE\x1b[0m');
-      terminal.writeln(`  Passed:  \x1b[32m${String(summary.passed)}\x1b[0m`);
-      terminal.writeln(`  Failed:  \x1b[31m${String(summary.failed)}\x1b[0m`);
-      terminal.writeln('---------------------------------------');
+  const emit = (eventPayload) => {
+    if (typeof onLogEvent === 'function') {
+      onLogEvent(eventPayload);
     }
   };
 
   const assert = {
     equal: (actual, expected, message) => {
       summary.total++;
-      if (actual === expected) {
+      const isPassed = actual === expected;
+      if (isPassed) {
         summary.passed++;
-        format.pass(message);
       } else {
         summary.failed++;
-        format.fail(message);
-        format.info(`Expected: "${expected}" | Got: "${actual}"`);
         summary.errors.push({ suite: activeSuite, message, expected, actual });
       }
+      emit({ type: 'assertion', status: isPassed ? 'PASS' : 'FAIL', message, expected, actual });
     },
     ok: (expression, message) => {
       assert.equal(!!expression, true, message);
+    },
+    // New log method available inside tests
+    log: (message, data = null) => {
+      emit({
+        type: 'log',
+        suite: activeSuite,
+        message,
+        timestamp: new Date().toISOString(),
+        data
+      });
     }
   };
 
   return {
     describe: async (suiteName, testFn) => {
       activeSuite = suiteName;
-      format.suite(suiteName);
+      emit({ type: 'suite-start', name: suiteName });
       try {
         await testFn(assert);
       } catch (err) {
         summary.failed++;
-        format.fail(`Suite encountered a critical exception!`);
-        format.info(`Error: ${err.message}`);
         summary.errors.push({ suite: activeSuite, message: err.message });
+        emit({ type: 'assertion', status: 'ERROR', message: 'Suite encountered a critical exception', error: err.message });
       }
     },
     getResults: () => {
-      format.summary();
-      return { success: summary.failed === 0, stats: summary };
+      return { success: summary.failed === 0, stats: { ...summary } };
     }
   };
 };

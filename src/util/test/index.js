@@ -1,36 +1,41 @@
 import { createTestRunner } from './runner.js';
 
-export const runApiTests = async (terminal) => {
-  terminal.clear();
-  const runner = createTestRunner(terminal);
+// Helper to isolate file names from full relative paths
+const getSuiteName = (path) => {
+  const parts = path.split('/');
+  // Returns the folder name right before 'index.js'
+  return parts[parts.length - 2] || path;
+};
 
-  const isIntercepted = !!navigator.serviceWorker.controller;
-  terminal.writeln(`\x1b[1;33mMode: ${isIntercepted ? 'Mock Engine Active' : 'Native Hardware Connected'}\x1b[0m`);
-
-  // Vite dynamic module glob loader. Finds all index.js files inside the tests/ subfolders.
-  // eager: true ensures they load synchronously during compilation.
+export const runApiTests = async (onLogEvent, targetSuiteName = null) => {
+  const runner = createTestRunner(onLogEvent);
   const testModules = import.meta.glob('./tests/**/index.js', { eager: true });
 
-  // Iterate over every auto-discovered test suite module dynamically
   for (const path in testModules) {
-    const suiteModule = testModules[path];
+    const suiteName = getSuiteName(path);
     
-    // Ensure the test file exports a default execution function
+    // If a specific test target is supplied, skip modules that do not match
+    if (targetSuiteName && suiteName.toLowerCase() !== targetSuiteName.toLowerCase()) {
+      continue;
+    }
+
+    const suiteModule = testModules[path];
     if (typeof suiteModule.default === 'function') {
       try {
-        // Run the specific isolated suite, injecting the shared runner and terminal
-        await suiteModule.default(runner, terminal);
+        await suiteModule.default(runner);
+        await new Promise(resolve => setTimeout(resolve, 0));
       } catch (err) {
-        terminal.writeln(`\x1b[31m[CRITICAL] Error executing suite at ${path}: ${err.message}\x1b[0m`);
+        runner.getResults().stats.errors.push({ suite: path, message: err.message });
       }
     }
   }
 
-  // Compile final totals
-  const outcomes = runner.getResults();
+  return runner.getResults();
+};
 
-  if (window.AndroidInterface && typeof window.AndroidInterface.onTestsComplete === 'function') {
-    window.AndroidInterface.onTestsComplete(JSON.stringify(outcomes));
-  }
+// NEW LOGIC: Scans directory paths and extracts an array of active test suite keys
+export const getAvailableTestsList = () => {
+  const testModules = import.meta.glob('./tests/**/index.js', { eager: false });
+  return Object.keys(testModules).map(path => getSuiteName(path));
 };
 

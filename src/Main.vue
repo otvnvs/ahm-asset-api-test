@@ -11,7 +11,7 @@
           {{ isCopying ? 'Copied' : 'Copy Logs' }}
         </button>
         <button 
-          @click="handleRunTests" 
+          @click="handleRunTests(null)" 
           :disabled="isRunning || !terminalInstance"
           class="action-btn run-btn"
         >
@@ -21,7 +21,7 @@
     </header>
 
     <main class="console-wrapper">
-      <TestTerminal @ready="onTerminalReady" />
+      <TestTerminal @ready="onTerminalReady" @command="handleTerminalCommand" />
     </main>
   </div>
 </template>
@@ -29,10 +29,10 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import TestTerminal from './components/TestTerminal.vue';
-import { runApiTests } from './util/test/index.js';
+import { runApiTests, getAvailableTestsList } from './util/test/index.js';
 
-// --- MANUAL SWITCH CONFIGURATION ---
 const USE_MOCKS = true; 
+const PROMPT_HEAD = '\r\n\x1b[1;32m$ \x1b[0m';
 
 const terminalInstance = ref(null);
 const isRunning = ref(false);
@@ -46,7 +46,7 @@ onMounted(async () => {
   const isAndroidEnv = /Android/i.test(navigator.userAgent);
 
   if ('serviceWorker' in navigator) {
-    if (USE_MOCKS) {
+    if (USE_MOCKS && !isAndroidEnv) {
       try {
         const registration = await navigator.serviceWorker.register('/mock-worker.js');
         console.log('Service Worker mock environment active.');
@@ -69,46 +69,150 @@ onMounted(async () => {
       for (const reg of activeRegistrations) {
         await reg.unregister();
       }
-      console.log('Mock Service Worker deactivated and cleared.');
     }
   }
 
-  // Auto-run terminal attachment loop
   const checkInterval = setInterval(async () => {
     if (terminalInstance.value) {
       clearInterval(checkInterval);
-      await handleRunTests();
+      await handleRunTests(null);
     }
   }, 50);
 });
 
-const handleRunTests = async () => {
+// ==========================================
+// ARGUMENT-AWARE INTERACTIVE SHELL ENGINE
+// ==========================================
+const handleTerminalCommand = async (rawInput) => {
+  if (!terminalInstance.value) return;
+
+  terminalInstance.value.write('\r\n');
+
+  if (rawInput === '') {
+    terminalInstance.value.write(PROMPT_HEAD);
+    return;
+  }
+
+  // Split arguments cleanly on white space footprints (e.g., "/run fs" -> ["/run", "fs"])
+  const inputParts = rawInput.split(/\s+/);
+  const coreCommand = inputParts[0];
+  const targetArgument = inputParts[1] || null;
+
+  switch (coreCommand) {
+    case '/help':
+      terminalInstance.value.writeln('\x1b[1;36mAvailable Automation Shell Commands:\x1b[0m');
+      terminalInstance.value.writeln('  /tests        - Lists all auto-discovered test suite profiles');
+      terminalInstance.value.writeln('  /run          - Triggers all discovered backend test blocks');
+      terminalInstance.value.writeln('  /run [target] - Triggers an isolated specific suite profile (e.g. /run fs)');
+      terminalInstance.value.writeln('  /clear        - Purges visible canvas rows from terminal history');
+      terminalInstance.value.writeln('  /copy         - Snapshots complete viewport traces onto clipboard');
+      terminalInstance.value.writeln('  /help         - Renders this clean operational reference table');
+      break;
+
+    case '/tests':
+      const list = getAvailableTestsList();
+      if (list.length === 0) {
+        terminalInstance.value.writeln('\x1b[33mNo test suite modules detected inside tests/ layout directory.\x1b[0m');
+      } else {
+        terminalInstance.value.writeln('\x1b[1;36mDiscovered Test Suites:\x1b[0m');
+        list.forEach(name => terminalInstance.value.writeln(`  * ${name}`));
+      }
+      break;
+
+    case '/run':
+      if (isRunning.value) {
+        terminalInstance.value.writeln('\x1b[1;31m[ERROR] Test suite execution loop is already active.\x1b[0m');
+      } else {
+        // Direct execution forward passing the target argument variable (null or string keyword)
+        await handleRunTests(targetArgument);
+        return; 
+      }
+      break;
+
+    case '/clear':
+      terminalInstance.value.clear();
+      break;
+
+    case '/copy':
+      await handleCopyLogs();
+      terminalInstance.value.writeln('\x1b[1;32mSystem console buffer trace snapshotted successfully to clipboard.\x1b[0m');
+      break;
+
+    default:
+      terminalInstance.value.writeln(`\x1b[1;31mUnknown shell instruction: "${coreCommand}". Type /help for assistance.\x1b[0m`);
+      break;
+  }
+
+  terminalInstance.value.write(PROMPT_HEAD);
+};
+
+const handleRunTests = async (targetSuite = null) => {
   if (!terminalInstance.value || isRunning.value) return;
   isRunning.value = true;
-  await runApiTests(terminalInstance.value);
+  
+  terminalInstance.value.clear();
+  
+  const isIntercepted = !!navigator.serviceWorker.controller;
+  terminalInstance.value.writeln(`\x1b[1;33mMode: ${isIntercepted ? 'Mock Engine Active' : 'Native Hardware Connected'}\x1b[0m`);
+  
+  if (targetSuite) {
+    terminalInstance.value.writeln(`\x1b[90mExecuting targeted slice isolation run for: "${targetSuite}"\x1b[0m`);
+  }
+
+const logToTerminalRealTime = (log) => {
+  if (log.type === 'suite-start') {
+    terminalInstance.value.writeln(`\n\x1b[1;35m[Suite] ${log.name}\x1b[0m`);
+  } else if (log.type === 'assertion') {
+    if (log.status === 'PASS') {
+      terminalInstance.value.writeln(`  \x1b[32m[PASS]\x1b[0m ${log.message}`);
+    } else if (log.status === 'FAIL') {
+      terminalInstance.value.writeln(`  \x1b[31m[FAIL]\x1b[0m ${log.message}`);
+      terminalInstance.value.writeln(`    \x1b[33m(i) Expected: "${log.expected}" | Got: "${log.actual}"\x1b[0m`);
+    } else if (log.status === 'ERROR') {
+      terminalInstance.value.writeln(`  \x1b[31m[ERROR]\x1b[0m ${log.message}: ${log.error}`);
+    }
+  } else if (log.type === 'log') {
+    // Prints a nice cyan-coloured log line in the terminal
+    terminalInstance.value.writeln(`  \x1b[36m[LOG]\x1b[0m ${log.message}`);
+    
+    // If you passed an extra data payload, pretty-print it too
+    if (log.data) {
+      const dataStr = typeof log.data === 'object' ? JSON.stringify(log.data, null, 2) : log.data;
+      // Indent data lines so they align neatly under the log tag
+      const indentedData = dataStr.split('\n').map(line => `        ${line}`).join('\n');
+      terminalInstance.value.writeln(`\x1b[90m${indentedData}\x1b[0m`);
+    }
+  }
+};
+
+  // Pass target parameter forward directly into the glob tracking runner
+  const results = await runApiTests(logToTerminalRealTime, targetSuite);
+
+  if (results.stats.total === 0 && targetSuite) {
+    terminalInstance.value.writeln(`\n\x1b[31m[ERROR] No matching suite discovered matching name string: "${targetSuite}"\x1b[0m`);
+  } else {
+    terminalInstance.value.writeln('\n\x1b[1;36mEXECUTION COMPLETE\x1b[0m');
+    terminalInstance.value.writeln(`  Passed:  \x1b[32m${results.stats.passed}\x1b[0m`);
+    terminalInstance.value.writeln(`  Failed:  \x1b[31m${results.stats.failed}\x1b[0m`);
+    terminalInstance.value.writeln('---------------------------------------');
+  }
+
+  terminalInstance.value.write(PROMPT_HEAD);
   isRunning.value = false;
 };
 
-// Clipboard extraction mechanism
 const handleCopyLogs = async () => {
   if (!terminalInstance.value || isCopying.value) return;
 
   try {
-    // 1. Select all buffer rows present inside the xterm viewport
     terminalInstance.value.selectAll();
-    
-    // 2. Extract selected buffer data as pure plain text string lines
     const logBufferText = terminalInstance.value.getSelection();
-    
-    // 3. Force clean deselection layout immediately to avoid stuck highlighting states
     terminalInstance.value.clearSelection();
 
     if (!logBufferText) return;
 
-    // 4. Stream data to system clipboard
     await navigator.clipboard.writeText(logBufferText);
     
-    // 5. Fire visual feedback interaction states
     isCopying.value = true;
     setTimeout(() => {
       isCopying.value = false;
