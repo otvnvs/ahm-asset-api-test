@@ -142,7 +142,7 @@ export default async function runSuite(runner) {
 	});
 
 	expect.equal(allSucceeded, true, 'All concurrent multi-stream extraction execution request routines completed gracefully');
-
+/*
 	// ==========================================
 	// CLEANUP PHASE
 	// ==========================================
@@ -165,6 +165,7 @@ export default async function runSuite(runner) {
         await fetch(`/api/fs/delete?path=${encodeURIComponent(extractDir)}&recursive=true`, { method: 'DELETE' });
         await fetch(`/api/fs/delete?path=${encodeURIComponent(`${extractDir}_rapid`)}&recursive=true`, { method: 'DELETE' });
         await fetch(`/api/fs/delete?path=${encodeURIComponent(zipFile)}&recursive=false`, { method: 'DELETE' });
+*/
     });
 }
 
