@@ -62,6 +62,8 @@ This document lists all intercepted native endpoints available to the WebView ap
 
 ## 2. Persistent Local File System Storage (`FsController`)
 
+File system operations start at the root of either internal Application static storage, sandbox, or device storage at `/storage/emulated/0` as returned by `Environment.getExternalStorageDirectory()`
+
 ### `GET /api/fs/list`
 *   **Description:** Lists the explicit files and directory contents array for a targeted location relative to the storage environment root.
 *   **Query Parameters:**
@@ -94,6 +96,8 @@ This document lists all intercepted native endpoints available to the WebView ap
 *   **Response Body:** Raw uncompressed byte string array matching target payload.
 
 ## 2. Persistent Local File System Storage (`FsController` - Continued)
+
+File system operations start at the root of either internal Application static storage, sandbox, or device storage at `/storage/emulated/0` as returned by `Environment.getExternalStorageDirectory()`
 
 ### `POST /api/fs/mkdir`
 *   **Description:** Requests the native layer file service engine initialization helper to construct a directory path workspace.
@@ -152,55 +156,9 @@ This document lists all intercepted native endpoints available to the WebView ap
     }
     ```
 
-### `POST /api/fs/zip`
-*   **Description:** Packs directory layout tree folders or standalone source documents recursively into a standalone ZIP file archive format. Includes an automatic media scanning broadcast if targeting designated download directories.
-*   **Query Parameters:** None.
-*   **Request Body:** `application/json` object containing file paths:
-    ```json
-    {
-      "sourcePath": "sandbox_folder",
-      "targetZipPath": "Download/integration_pack.zip"
-    }
-    ```
-*   **Response Status:**
-    *   `200 OK` (Successful compression pipeline execution)
-    *   `433 Forbidden` (Directory traversal attack detection boundary violation)
-    *   `500 Internal Server Error` (catastrophic filesystem zip engine crash)
-*   **Response Headers:** `Content-Type: application/json`
-*   **Response Body:**
-    ```json
-    {
-      "status": "success",
-      "message": "Files compressed successfully into ZIP archive.",
-      "archiveSize": 4096
-    }
-    ```
-
-### `POST /api/fs/unzip`
-*   **Description:** Extracts compressed file archives out into a designated workspace directory target path layout. Implements strict Zip Slip safety validation mapping routines.
-*   **Query Parameters:** None.
-*   **Request Body:** `application/json` mapping input payload instructions:
-    ```json
-    {
-      "zipPath": "exports/package.zip",
-      "targetDirectory": "extracted_suite"
-    }
-    ```
-*   **Response Status:**
-    *   `200 OK` (Extraction completed flawlessly)
-    *   `403 Forbidden` (Zip Slip directory traversal execution block triggered)
-    *   `404 Not Found` (Source archive source resource file not present)
-    *   `500 Internal Server Error` (Fatal system extractor corruption exception)
-*   **Response Headers:** `Content-Type: application/json`
-*   **Response Body:**
-    ```json
-    {
-      "status": "success",
-      "message": "Archive successfully extracted onto native filesystem.",
-      "targetDirectory": "extracted_suite"
-    }
-    ```
 ## 3. Maintenance, Hot Deployments & Application Lifecycle (`MaintenanceController`)
+
+File system operations start at the root of either internal Application static storage, sandbox, or device storage at `/storage/emulated/0` as returned by `Environment.getExternalStorageDirectory()`
 
 ### `GET /api/maintenance/config`
 *   **Description:** Retrieves the dynamic JSON parameters string profile containing system maintenance constraints and active variable properties.
@@ -328,4 +286,50 @@ This document lists all intercepted native endpoints available to the WebView ap
     *   `400 Bad Request` (Missing required url or path params)
 *   **Response Headers:** `Content-Type: application/json` (or dynamic error string values)
 *   **Response Body:** Stream buffers (or JSON string errors if validation parameters check breaks).
+
+## 5. Native Filesystem Archival Utilities (`ArcController`)
+
+File system operations start at the root of either internal Application static storage, sandbox, or device storage at `/storage/emulated/0` as returned by `Environment.getExternalStorageDirectory()`
+
+### `POST /api/arc/zip`
+*   **Description:** Compresses a specified file or local directory tree structure into a standardized `.zip` archive payload block on the native storage filesystem.
+*   **Query Parameters:** None.
+*   **Request Body:** `application/json` object detailing compression requirements:
+    ```json
+    {
+      "sourcePath": "arc_test_source_dir",
+      "targetZipPath": "arc_test_payload.zip"
+    }
+    ```
+*   **Response Status:** `200 OK` (Standard operational compression payload container wrapper status)
+*   **Response Headers:** `Content-Type: application/json`
+*   **Response Body:** Container detailing the archival compression operational metrics outcome profile:
+    ```json
+    {
+      "status": "success",
+      "message": "Files compressed successfully into ZIP archive.",
+      "archiveSize": 335
+    }
+    ```
+
+### `POST /api/arc/unzip`
+*   **Description:** Extracts the contents of a designated local `.zip` file archive binary layout block into a specified target directory destination layout hierarchy.
+*   **Query Parameters:** None.
+*   **Request Body:** `application/json` object detailing extraction requirements:
+    ```json
+    {
+      "zipPath": "arc_test_payload.zip",
+      "targetDirectory": "arc_test_extracted_out"
+    }
+    ```
+*   **Response Status:** `200 OK` (Standard operational decompression payload container wrapper status)
+*   **Response Headers:** `Content-Type: application/json`
+*   **Response Body:** Container detailing the extraction fulfillment state completion metadata profile:
+    ```json
+    {
+      "status": "success",
+      "message": "Archive successfully extracted onto native filesystem.",
+      "targetDirectory": "arc_test_extracted_out"
+    }
+    ```
 

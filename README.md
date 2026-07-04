@@ -30,6 +30,7 @@ Open `./src/util/test/index.js`, navigate to the relevant `describe` block, and 
 
 ```javascript
 await runner.describe('Your API Module Title', async (expect) => {
+  expect.log("informationa log: testing123");
   const response = await fetch('/api/your/new-route?param=value', { method: 'POST' });
   expect.equal(response.status, 200, 'POST /new-route returns operational status code');
   

@@ -75,7 +75,8 @@ onMounted(async () => {
   const checkInterval = setInterval(async () => {
     if (terminalInstance.value) {
       clearInterval(checkInterval);
-      await handleRunTests(null);
+      //await handleRunTests(null);//do not automatically run
+ await handleTerminalCommand('/help');
     }
   }, 50);
 });

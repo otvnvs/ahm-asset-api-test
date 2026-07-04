@@ -57,7 +57,7 @@ export default async function runSuite(runner) {
       await Promise.all(currentBatchPromises);
       
       // Yield thread control back to the browser painting engine briefly to update the screen
-      expect.log(`Completed batch block metrics track: requests ${i + currentBatchPromises.length}/${TOTAL_REQUESTS}...`);
+      //expect.log(`Completed batch block metrics track: requests ${i + currentBatchPromises.length}/${TOTAL_REQUESTS}...`);
       await new Promise(resolve => setTimeout(resolve, 10));
     }
 
