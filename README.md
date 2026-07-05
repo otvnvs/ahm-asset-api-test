@@ -29,14 +29,15 @@ This project is a hybrid Vue 3 / Vite web application optimized to run inside a 
 Open `./src/util/test/index.js`, navigate to the relevant `describe` block, and use a standard `fetch` call paired with the assertion wrapper:
 
 ```javascript
-await runner.describe('Your API Module Title', async (expect) => {
-  expect.log("informationa log: testing123");
-  const response = await fetch('/api/your/new-route?param=value', { method: 'POST' });
-  expect.equal(response.status, 200, 'POST /new-route returns operational status code');
-  
-  const payload = await response.json();
-  expect.equal(payload.status, 'success', 'Payload state matches expected output criteria');
-});
+export default async function runSuite(runner) {
+  await runner.describe('Your API Module Title', async (expect) => {
+    expect.log("informationa log: testing123");
+    const response = await fetch('/api/your/new-route?param=value', { method: 'POST' });
+    expect.equal(response.status, 200, 'POST /new-route returns operational status code');
+    const payload = await response.json();
+    expect.equal(payload.status, 'success', 'Payload state matches expected output criteria');
+  });
+}
 ```
 
 ### To Update a Desktop Response Stub
