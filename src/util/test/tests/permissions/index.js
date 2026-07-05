@@ -21,6 +21,7 @@ await runner.describe('Android Universal Permissions Routing Module', async (exp
       throw new Error(`Failed to dispatch request alert wrapper: ${reqResponse.status}`);
     }
 
+    expect.log("  *Note: Run ./scripts/permissions.sh --revoke android.permission.CAMERA prior to running this test.");
     expect.log("  [Blocking Loop Activated] Popup inflated. Pausing automation flow...");
     expect.log("  -> Please manually select ALLOW or DENY on the system window now!");
 
