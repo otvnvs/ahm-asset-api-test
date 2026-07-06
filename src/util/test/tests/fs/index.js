@@ -110,6 +110,7 @@
 //}
 //
 export default async function runSuite(runner) {
+  // --- SUB-SUITE A: Existing Native File System Lifecycle Tasks ---
   await runner.describe('Native Sandbox Comprehensive Lifecycle', async (expect) => {
     const tempDir = 'comprehensive_lifecycle_test';
     const file1 = `${tempDir}/first_document.txt`;
@@ -148,5 +149,52 @@ export default async function runSuite(runner) {
     // Clean up temporary testing directories
     await fetch(`/api/fs/delete?path=${encodeURIComponent(tempDir)}&recursive=true`, { method: 'DELETE' });
   });
-}
 
+
+  // --- NEW SUB-SUITE B: Automated Storage Block & Partition Diagnostics (Expanded Logging) ---
+  await runner.describe('Android Disk Space Partition Verification', async (expect) => {
+    expect.log("=== START EXPLICIT BLOCK FOOTPRINT EXTRACTION SWEEP ===");
+
+    const response = await fetch('/api/fs/diskspace', { method: 'GET' });
+    expect.equal(response.status, 200, 'GET /api/fs/diskspace returns valid 200 OK configuration status');
+
+    const payload = await response.json();
+
+    expect.equal(typeof payload.internal_partition, 'object', 'Payload includes flash drive statistics');
+    expect.equal(typeof payload.secondary_partition, 'object', 'Payload includes removable SD card configuration metadata');
+    expect.equal(typeof payload.app_sandbox_cache, 'object', 'Payload resolves application specific cache tracking footprints');
+
+    // --- EXPANDED INTERNAL SYSTEM DRIVE LOGGING ---
+    expect.log("--- [INTERNAL] RAW BYTE ANALYSIS ---");
+    expect.log(`  Raw Partition Path: ${payload.internal_partition.partition_path}`);
+    expect.log(`  Total Allocation Capacity: ${payload.internal_partition.total_space_bytes} bytes`);
+    expect.log(`  Free Block Space Headroom: ${payload.internal_partition.available_space_bytes} bytes`);
+    
+    const intTotalGB = (payload.internal_partition.total_space_bytes / (1024 ** 3)).toFixed(2);
+    const intAvailGB = (payload.internal_partition.available_space_bytes / (1024 ** 3)).toFixed(2);
+    const intUsedGB = (intTotalGB - intAvailGB).toFixed(2);
+    expect.log(`  Summary: ${intUsedGB} GB Used / ${intAvailGB} GB Free out of ${intTotalGB} GB Capacity`);
+
+    // --- EXPANDED REMOVABLE MICRO-SD MOUNT LOGGING ---
+    expect.log("--- [EXTERNAL] SUBSYSTEM MOUNT DETECTION ---");
+    expect.log(`  Hardware Expansion Slot Occupied: ${payload.secondary_partition.removable_sdcard_mounted}`);
+    expect.log(`  Hardware Partition Target Path: ${payload.secondary_partition.partition_path}`);
+    expect.log(`  SD Total Capacity Space: ${payload.secondary_partition.total_space_bytes} bytes`);
+    expect.log(`  SD Available Capacity Space: ${payload.secondary_partition.available_space_bytes} bytes`);
+
+    // --- EXPANDED APP SANDBOX WORKSPACE LOGGING ---
+    expect.log("--- [APPLICATION] APP SANDBOX WORKSPACE CACHE FOOTPRINT ---");
+    expect.log(`  Sandbox App Cache Workspace Path: ${payload.app_sandbox_cache.sandbox_cache_path}`);
+    expect.log(`  Raw Computed Cache Size: ${payload.app_sandbox_cache.active_cache_usage_bytes} bytes`);
+    
+    const appCacheKB = (payload.app_sandbox_cache.active_cache_usage_bytes / 1024).toFixed(2);
+    if (appCacheKB > 1024) {
+      expect.log(`  Calculated Cache Size: ${(appCacheKB / 1024).toFixed(2)} MB`);
+    } else {
+      expect.log(`  Calculated Cache Size: ${appCacheKB} KB`);
+    }
+
+    expect.equal(typeof payload.secondary_partition.removable_sdcard_mounted, 'boolean', 'Secondary check variable matches true/false flag state');
+    expect.log("=== END EXPLICIT BLOCK FOOTPRINT EXTRACTION SWEEP ===");
+  });
+}
