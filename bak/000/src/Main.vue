@@ -1,4 +1,3 @@
-
 <template>
   <div class="app-layout">
     <header class="app-header">
@@ -6,27 +5,23 @@
       <div class="action-bar">
         <button 
           @click="handleCopyLogs" 
-          :disabled="!terminalInstance" 
+          :disabled="!terminalInstance"
           class="action-btn copy-btn"
         >
           {{ isCopying ? 'Copied' : 'Copy Logs' }}
         </button>
         <button 
           @click="handleRunTests(null)" 
-          :disabled="isRunning || !terminalInstance" 
+          :disabled="isRunning || !terminalInstance"
           class="action-btn run-btn"
         >
           {{ isRunning ? 'Running' : 'Rerun Suite' }}
         </button>
       </div>
     </header>
+
     <main class="console-wrapper">
-      <TestTerminal 
-        @ready="onTerminalReady" 
-        @command="handleTerminalCommand"
-        @history-up="handleHistoryUp"
-        @history-down="handleHistoryDown"
-      />
+      <TestTerminal @ready="onTerminalReady" @command="handleTerminalCommand" />
     </main>
   </div>
 </template>
@@ -36,86 +31,26 @@ import { ref, onMounted } from 'vue';
 import TestTerminal from './components/TestTerminal.vue';
 import { runApiTests, getAvailableTestsList } from './util/test/index.js';
 
-const USE_MOCKS = true;
+const USE_MOCKS = true; 
 const PROMPT_HEAD = '\r\n\x1b[1;32m$ \x1b[0m';
-const STORAGE_KEY = 'ahm-asset-api-test';
 
 const terminalInstance = ref(null);
 const isRunning = ref(false);
 const isCopying = ref(false);
 
-const history = ref([]);
-const historyIndex = ref(-1);
-const currentInputCache = ref('');
-
 const onTerminalReady = (term) => {
   terminalInstance.value = term;
 };
 
-const loadHistory = () => {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    history.value = saved ? JSON.parse(saved) : [];
-  } catch (err) {
-    console.error('Failed to parse history:', err);
-    history.value = [];
-  }
-};
-
-const saveCommandToHistory = (commandText) => {
-  if (!commandText || commandText.trim() === '') return;
-  if (history.value[history.value.length - 1] === commandText) return;
-
-  history.value.push(commandText);
-  if (history.value.length > 100) history.value.shift();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(history.value));
-};
-
-const handleHistoryUp = (currentBuffer) => {
-  if (history.value.length === 0) return;
-
-  if (historyIndex.value === -1) {
-    currentInputCache.value = currentBuffer;
-    historyIndex.value = history.value.length - 1;
-  } else if (historyIndex.value > 0) {
-    historyIndex.value--;
-  }
-
-  updateTerminalInputLine(history.value[historyIndex.value]);
-};
-
-const handleHistoryDown = () => {
-  if (historyIndex.value === -1) return;
-
-  if (historyIndex.value < history.value.length - 1) {
-    historyIndex.value++;
-    updateTerminalInputLine(history.value[historyIndex.value]);
-  } else {
-    historyIndex.value = -1;
-    updateTerminalInputLine(currentInputCache.value);
-  }
-};
-
-const updateTerminalInputLine = (text) => {
-  if (!terminalInstance.value) return;
-  
-  terminalInstance.value.write('\r\x1b[2K'); 
-  terminalInstance.value.write(`\x1b[1;32m$ \x1b[0m${text}`);
-  
-  if (typeof terminalInstance.value.setCommandBuffer === 'function') {
-    terminalInstance.value.setCommandBuffer(text);
-  }
-};
-
 onMounted(async () => {
-  loadHistory();
-  
   const isAndroidEnv = /Android/i.test(navigator.userAgent);
+
   if ('serviceWorker' in navigator) {
     if (USE_MOCKS && !isAndroidEnv) {
       try {
         const registration = await navigator.serviceWorker.register('/mock-worker.js');
         console.log('Service Worker mock environment active.');
+
         if (!navigator.serviceWorker.controller) {
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
@@ -140,83 +75,95 @@ onMounted(async () => {
   const checkInterval = setInterval(async () => {
     if (terminalInstance.value) {
       clearInterval(checkInterval);
-      await handleTerminalCommand('help');
+      //await handleRunTests(null);//do not automatically run
+ await handleTerminalCommand('/help');
     }
   }, 50);
 });
+
+// ==========================================
+// ARGUMENT-AWARE INTERACTIVE SHELL ENGINE
+// ==========================================
 const handleTerminalCommand = async (rawInput) => {
   if (!terminalInstance.value) return;
-  
+
   terminalInstance.value.write('\r\n');
+
   if (rawInput === '') {
     terminalInstance.value.write(PROMPT_HEAD);
     return;
   }
 
-  saveCommandToHistory(rawInput);
-  historyIndex.value = -1;
-  currentInputCache.value = '';
-
+  // Split arguments cleanly on white space footprints (e.g., "/run fs" -> ["/run", "fs"])
   const inputParts = rawInput.split(/\s+/);
   const coreCommand = inputParts[0];
   const targetArgument = inputParts[1] || null;
 
   switch (coreCommand) {
-    case 'help':
+    case '/help':
       terminalInstance.value.writeln('\x1b[1;36mAvailable Automation Shell Commands:\x1b[0m');
-      terminalInstance.value.writeln('  tests        - Lists all auto-discovered test suite profiles');
-      terminalInstance.value.writeln('  run          - Triggers all discovered backend test blocks');
-      terminalInstance.value.writeln('  run [target] - Triggers an isolated specific suite profile (e.g. /run fs)');
-      terminalInstance.value.writeln('  clear        - Purges visible canvas rows from terminal history');
-      terminalInstance.value.writeln('  copy         - Snapshots complete viewport traces onto clipboard');
-      terminalInstance.value.writeln('  post target  - HTTP posts viewport traces to target URL');
-      terminalInstance.value.writeln('  help         - Renders this clean operational reference table');
+      terminalInstance.value.writeln('  /tests        - Lists all auto-discovered test suite profiles');
+      terminalInstance.value.writeln('  /run          - Triggers all discovered backend test blocks');
+      terminalInstance.value.writeln('  /run [target] - Triggers an isolated specific suite profile (e.g. /run fs)');
+      terminalInstance.value.writeln('  /clear        - Purges visible canvas rows from terminal history');
+      terminalInstance.value.writeln('  /copy         - Snapshots complete viewport traces onto clipboard');
+      terminalInstance.value.writeln('  /post target  - HTTP posts viewport traces to target URL');
+      terminalInstance.value.writeln('  /help         - Renders this clean operational reference table');
       break;
-    case 'tests':
+
+    case '/tests':
       const list = getAvailableTestsList();
       if (list.length === 0) {
         terminalInstance.value.writeln('\x1b[33mNo test suite modules detected inside tests/ layout directory.\x1b[0m');
       } else {
         terminalInstance.value.writeln('\x1b[1;36mDiscovered Test Suites:\x1b[0m');
-        list.forEach(name => terminalInstance.value.writeln(`* ${name}`));
+        list.forEach(name => terminalInstance.value.writeln(`  * ${name}`));
       }
       break;
-    case 'run':
+
+    case '/run':
       if (isRunning.value) {
         terminalInstance.value.writeln('\x1b[1;31m[ERROR] Test suite execution loop is already active.\x1b[0m');
       } else {
+        // Direct execution forward passing the target argument variable (null or string keyword)
         await handleRunTests(targetArgument);
-        return;
+        return; 
       }
       break;
-    case 'clear':
+
+    case '/clear':
       terminalInstance.value.clear();
       break;
-    case 'copy':
+
+    case '/copy':
       await handleCopyLogs();
       terminalInstance.value.writeln('\x1b[1;32mSystem console buffer trace snapshotted successfully to clipboard.\x1b[0m');
       break;
-    case 'post':
-      try {
+
+    case '/post':
+      try{
         await handlePostLogs(targetArgument);
-        terminalInstance.value.writeln('\x1b[1;32mPosted to ' + targetArgument + '.\x1b[0m');
-      } catch (e) {
-        terminalInstance.value.writeln('\x1b[1;31m[ERROR] ' + ('Failed to post to ' + targetArgument + ': ' + e.toString()) + '\x1b[0m');
+        terminalInstance.value.writeln('\x1b[1;32mPosted to '+targetArgument+'.\x1b[0m');
+      }catch(e){
+        terminalInstance.value.writeln('\x1b[1;31m[ERROR] '+('Failed to post to '+targetArgument+':'+e.toString())+'\x1b[0m');
       }
       break;
+
+
     default:
       terminalInstance.value.writeln(`\x1b[1;31mUnknown shell instruction: "${coreCommand}". Type /help for assistance.\x1b[0m`);
       break;
   }
-  
+
   terminalInstance.value.write(PROMPT_HEAD);
 };
 
 const handleRunTests = async (targetSuite = null) => {
   if (!terminalInstance.value || isRunning.value) return;
   isRunning.value = true;
+  
   terminalInstance.value.clear();
-
+  
   const isIntercepted = !!navigator.serviceWorker.controller;
   terminalInstance.value.writeln(`\x1b[1;33mMode: ${isIntercepted ? 'Mock Engine Active' : 'Native Hardware Connected'}\x1b[0m`);
   
@@ -224,93 +171,69 @@ const handleRunTests = async (targetSuite = null) => {
     terminalInstance.value.writeln(`\x1b[90mExecuting targeted slice isolation run for: "${targetSuite}"\x1b[0m`);
   }
 
-  const logToTerminalRealTime = (log) => {
-    if (log.type === 'suite-start') {
-      terminalInstance.value.writeln(`\n\x1b[1;35m[Suite] ${log.name}\x1b[0m`);
-    } else if (log.type === 'assertion') {
-      if (log.status === 'PASS') {
-        terminalInstance.value.writeln(`\x1b[32m[PASS]\x1b[0m ${log.message}`);
-      } else if (log.status === 'FAIL') {
-        terminalInstance.value.writeln(`\x1b[31m[FAIL]\x1b[0m ${log.message}`);
-        terminalInstance.value.writeln(`\x1b[33m(i) Expected: "${log.expected}" | Got: "${log.actual}"\x1b[0m`);
-      } else if (log.status === 'ERROR') {
-        terminalInstance.value.writeln(`\x1b[31m[ERROR]\x1b[0m ${log.message}: ${log.error}`);
-      }
-    } else if (log.type === 'log') {
-      terminalInstance.value.writeln(`\x1b[36m[LOG]\x1b[0m ${log.message}`);
-      if (log.data) {
-        const dataStr = typeof log.data === 'object' ? JSON.stringify(log.data, null, 2) : log.data;
-        const indentedData = dataStr.split('\n').map(line => `${line}`).join('\n');
-        terminalInstance.value.writeln(`\x1b[90m${indentedData}\x1b[0m`);
-      }
+const logToTerminalRealTime = (log) => {
+  if (log.type === 'suite-start') {
+    terminalInstance.value.writeln(`\n\x1b[1;35m[Suite] ${log.name}\x1b[0m`);
+  } else if (log.type === 'assertion') {
+    if (log.status === 'PASS') {
+      terminalInstance.value.writeln(`  \x1b[32m[PASS]\x1b[0m ${log.message}`);
+    } else if (log.status === 'FAIL') {
+      terminalInstance.value.writeln(`  \x1b[31m[FAIL]\x1b[0m ${log.message}`);
+      terminalInstance.value.writeln(`    \x1b[33m(i) Expected: "${log.expected}" | Got: "${log.actual}"\x1b[0m`);
+    } else if (log.status === 'ERROR') {
+      terminalInstance.value.writeln(`  \x1b[31m[ERROR]\x1b[0m ${log.message}: ${log.error}`);
     }
-  };
+  } else if (log.type === 'log') {
+    // Prints a nice cyan-coloured log line in the terminal
+    terminalInstance.value.writeln(`  \x1b[36m[LOG]\x1b[0m ${log.message}`);
+    
+    // If you passed an extra data payload, pretty-print it too
+    if (log.data) {
+      const dataStr = typeof log.data === 'object' ? JSON.stringify(log.data, null, 2) : log.data;
+      // Indent data lines so they align neatly under the log tag
+      const indentedData = dataStr.split('\n').map(line => `        ${line}`).join('\n');
+      terminalInstance.value.writeln(`\x1b[90m${indentedData}\x1b[0m`);
+    }
+  }
+};
 
+  // Pass target parameter forward directly into the glob tracking runner
   const results = await runApiTests(logToTerminalRealTime, targetSuite);
-  
+
   if (results.stats.total === 0 && targetSuite) {
     terminalInstance.value.writeln(`\n\x1b[31m[ERROR] No matching suite discovered matching name string: "${targetSuite}"\x1b[0m`);
   } else {
     terminalInstance.value.writeln('\n\x1b[1;36mEXECUTION COMPLETE\x1b[0m');
-    terminalInstance.value.writeln(`Passed: \x1b[32m${results.stats.passed}\x1b[0m`);
-    terminalInstance.value.writeln(`Failed: \x1b[31m${results.stats.failed}\x1b[0m`);
+    terminalInstance.value.writeln(`  Passed:  \x1b[32m${results.stats.passed}\x1b[0m`);
+    terminalInstance.value.writeln(`  Failed:  \x1b[31m${results.stats.failed}\x1b[0m`);
     terminalInstance.value.writeln('---------------------------------------');
   }
-  
+
   terminalInstance.value.write(PROMPT_HEAD);
   isRunning.value = false;
 };
 
 const handleCopyLogs = async () => {
   if (!terminalInstance.value || isCopying.value) return;
+
   try {
     terminalInstance.value.selectAll();
     const logBufferText = terminalInstance.value.getSelection();
     terminalInstance.value.clearSelection();
-    
+
     if (!logBufferText) return;
-    
+
     await navigator.clipboard.writeText(logBufferText);
+    
     isCopying.value = true;
     setTimeout(() => {
       isCopying.value = false;
     }, 2000);
+
   } catch (err) {
     console.error('Failed to copy active console text strings to clipboard:', err);
   }
 };
-
-//const Logs = async (url) => {
-//  if (!terminalInstance.value || isCopying.value) return;
-//  if (!url) return;
-//  
-//  try {
-//    terminalInstance.value.selectAll();
-//    const logBufferText = terminalInstance.value.getSelection();
-//    terminalInstance.value.clearSelection();
-//    
-//    if (!logBufferText) return;
-//    
-//    isCopying.value = true;
-//    
-//    await fetch(url, {
-//      method: 'POST',
-//      headers: {
-//        'Content-Type': 'application/json',
-//      },
-//      body: JSON.stringify({ logs: logBufferText }),
-//    });
-//    
-//    setTimeout(() => {
-//      isCopying.value = false;
-//    }, 2000);
-//  } catch (err) {
-//    console.error('Failed to post terminal logs to the server:', err);
-//    isCopying.value = false;
-//    throw err;
-//  }
-//};
-
 const handlePostLogs = async (url) => {
   if (!terminalInstance.value || isCopying.value) return;
   if (!url) return;
@@ -324,32 +247,24 @@ const handlePostLogs = async (url) => {
 
     isCopying.value = true;
 
-    // Route payload through the Cross-Origin Network Proxy Broker
-    await fetch('/api/net/proxy', {
+    // Perform HTTP POST request
+    await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        url: url, // The original target external destination
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ logs: logBufferText }), // Wrapped payload stringified
-      }),
+      body: JSON.stringify({ logs: logBufferText }),
     });
 
     setTimeout(() => {
       isCopying.value = false;
     }, 2000);
+
   } catch (err) {
-    console.error('Failed to post terminal logs to the server via proxy:', err);
-    isCopying.value = false;
-    throw err;
+    console.error('Failed to post terminal logs to the server:', err);
+    isCopying.value = false; // Reset state on error
   }
 };
-
 
 </script>
 

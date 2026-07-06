@@ -19,9 +19,7 @@ const props = defineProps({
   }
 });
 
-// Added 'history-up' and 'history-down' to triggers
-const emit = defineEmits(['ready', 'command', 'history-up', 'history-down']);
-
+const emit = defineEmits(['ready', 'command']);
 const terminalContainer = ref(null);
 let term = null;
 let fitAddon = null;
@@ -41,41 +39,34 @@ onMounted(() => {
   fitAddon = new FitAddon();
   term.loadAddon(fitAddon);
   term.open(terminalContainer.value);
-
+  
   setTimeout(() => fitAddon.fit(), 50);
+
+  // ==========================================
+  // INSTANT KEYBOARD FOCUS ENFORCEMENT
+  // ==========================================
   setTimeout(() => {
     if (term) {
+      // 1. Force the engine's core input framework to claim focus
       term.focus();
+      
+      // 2. Locate and forcefully activate the underlying browser text area node
       const internalTextArea = terminalContainer.value?.querySelector('.xterm-helper-textarea');
       if (internalTextArea) {
         internalTextArea.focus();
-        internalTextArea.click();
+        internalTextArea.click(); // Fires a virtual tap to trick WebView security gates
       }
     }
   }, 100);
 
   term.onData((data) => {
-    // 1. Capture escape sequence string for Arrow Up key
-    if (data === '\x1b[A') {
-      emit('history-up', commandBuffer);
-      return;
-    }
-
-    // 2. Capture escape sequence string for Arrow Down key
-    if (data === '\x1b[B') {
-      emit('history-down');
-      return;
-    }
-
     const code = data.charCodeAt(0);
-
     if (code === 13) {
       const cleanCommandInput = commandBuffer.trim();
       commandBuffer = '';
       emit('command', cleanCommandInput);
       return;
     }
-
     if (code === 127 || code === 8) {
       if (commandBuffer.length > 0) {
         commandBuffer = commandBuffer.slice(0, -1);
@@ -83,7 +74,6 @@ onMounted(() => {
       }
       return;
     }
-
     if (code >= 32 && code <= 126) {
       commandBuffer += data;
       term.write(data);
@@ -92,11 +82,6 @@ onMounted(() => {
 
   window.addEventListener('resize', handleResize);
   window.addEventListener('orientationchange', handleResize);
-
-  // 3. Expose instance modification helper directly to terminal object references
-  term.setCommandBuffer = (newText) => {
-    commandBuffer = newText;
-  };
 
   emit('ready', term);
 });
@@ -118,7 +103,7 @@ const handleResize = () => {
   height: 100%;
   background: #000000;
   box-sizing: border-box;
-  touch-action: pan-y !important;
+  touch-action: pan-y !important; 
   -webkit-overflow-scrolling: touch !important;
 }
 :deep(.xterm) {
@@ -126,7 +111,7 @@ const handleResize = () => {
 }
 :deep(.xterm-viewport) {
   background-color: #000000 !important;
-  pointer-events: auto !important;
+  pointer-events: auto !important; 
 }
 </style>
 

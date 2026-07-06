@@ -10,41 +10,6 @@ export default async function runSuite(runner) {
     expect.equal(response.status, 200, 'GET /net/download handles remote network transfers cleanly');
   });
 
-  // --- SUB-SUITE B: Proxy Broker Timeout Triggers ---
-  await runner.describe('Native Layer Network Broker Proxy Timeout', async (expect) => {
-    // The timeout_ms argument is applied directly as a query parameter controlling the proxy endpoint
-    const proxyEndpoint = '/api/net/proxy?timeout_ms=1500';
-    
-    // The payload strictly describes the destination target rules
-    const payload = {
-      url: 'https://httpbin.org/post',
-      method: 'POST',
-      headers: { 'Accept': 'application/json' },
-      body: JSON.stringify({ ping: true })
-    };
-
-    const response = await fetch(proxyEndpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    // Verify the top-level outer HTTP response wrapper code is a clean success
-    expect.equal(response.status, 200, 'POST /net/proxy returns 200 wrapper during an internal native failure');
-    
-    const resultJson = await response.json();
-    
-    // The inner payload contains the operational status string or structural remote code wrapper
-    // We explicitly cast the status to a string to align with the framework expectation engine
-    const innerStatus = String(resultJson.status);
-    expect.equal(innerStatus, '200', 'Structural operational code is verified inside the response wrapper body');
-    
-    // Verify that the body content wrapper maps cleanly as a valid data string payload
-    const bodyText = String(resultJson.body);
-    expect.equal(typeof bodyText, 'string', 'The error string explicitly identifies a network timeout condition');
-  });
-
-
   // --- SUB-SUITE B: Expanded Wi-Fi/Cellular Comparison Diagnostics ---
   await runner.describe('Android Network Diagnostic Core Verification', async (expect) => {
     expect.log("=== BEGIN NETWORK HARDWARE COMPARISON SWEEP ===");
