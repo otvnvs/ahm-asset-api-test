@@ -270,7 +270,7 @@ const handleCopyLogs = async () => {
     
     if (!logBufferText) return;
     
-    await navigator.clipboard.writeText(logBufferText);
+    await navigator.clipboard.writeText(logBufferText.trim());
     isCopying.value = true;
     setTimeout(() => {
       isCopying.value = false;
@@ -311,6 +311,44 @@ const handleCopyLogs = async () => {
 //  }
 //};
 
+//const handlePostLogs = async (url) => {
+//  if (!terminalInstance.value || isCopying.value) return;
+//  if (!url) return;
+//
+//  try {
+//    terminalInstance.value.selectAll();
+//    const logBufferText = terminalInstance.value.getSelection();
+//    terminalInstance.value.clearSelection();
+//
+//    if (!logBufferText) return;
+//
+//    isCopying.value = true;
+//
+//    // Route payload through the Cross-Origin Network Proxy Broker
+//    await fetch('/api/net/request', {
+//      method: 'POST',
+//      headers: {
+//        'Content-Type': 'application/json',
+//      },
+//      body: JSON.stringify({
+//        url: url,
+//        method: 'POST',
+//        headers: {
+//          'Content-Type': 'text/plain',
+//        },
+//        body: logBufferText
+//      }),
+//    });
+//
+//    setTimeout(() => {
+//      isCopying.value = false;
+//    }, 2000);
+//  } catch (err) {
+//    console.error('Failed to post terminal logs to the server via request:', err);
+//    isCopying.value = false;
+//    throw err;
+//  }
+//};
 const handlePostLogs = async (url) => {
   if (!terminalInstance.value || isCopying.value) return;
   if (!url) return;
@@ -324,31 +362,36 @@ const handlePostLogs = async (url) => {
 
     isCopying.value = true;
 
-    // Route payload through the Cross-Origin Network Proxy Broker
-    await fetch('/api/net/proxy', {
+    // Dispatch to the broker endpoint path
+    await fetch('/api/net/request', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      // ENCLOSING EVERYTHING IN THE OFFICIAL FETCH 'BODY' PARAMETER:
       body: JSON.stringify({
-        url: url, // The original target external destination
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ logs: logBufferText }), // Wrapped payload stringified
-      }),
+        timeout_ms: 15000, 
+        request: { 
+          url: url, 
+          method: 'POST', 
+          headers: { 
+            'Content-Type': 'text/plain',
+          },
+          body: logBufferText.trim()
+        }
+      })
     });
 
     setTimeout(() => {
       isCopying.value = false;
     }, 2000);
   } catch (err) {
-    console.error('Failed to post terminal logs to the server via proxy:', err);
+    console.error('Failed to post terminal logs to the server via request:', err);
     isCopying.value = false;
     throw err;
   }
 };
+
 
 
 </script>
