@@ -2,7 +2,25 @@
 <template>
   <div class="app-layout">
     <header class="app-header">
-      <span class="app-title">Android API Test Engine</span>
+        <!-- Mobile History D-Pad Controls -->
+        <div class="mobile-history-controls">
+          <button 
+            @click="triggerMobileHistoryUp" 
+            :disabled="!terminalInstance"
+            class="history-btn" 
+            title="History Up"
+          >
+            ▲
+          </button>
+          <button 
+            @click="handleHistoryDown" 
+            :disabled="!terminalInstance"
+            class="history-btn" 
+            title="History Down"
+          >
+            ▼
+          </button>
+        </div>
       <div class="action-bar">
         <button 
           @click="handleCopyLogs" 
@@ -18,6 +36,8 @@
         >
           {{ isRunning ? 'Running' : 'Rerun Suite' }}
         </button>
+
+
       </div>
     </header>
     <main class="console-wrapper">
@@ -392,6 +412,22 @@ const handlePostLogs = async (url) => {
   }
 };
 
+const triggerMobileHistoryUp = () => {
+  if (!terminalInstance.value) return;
+  
+  // Try to safely retrieve the current uncommitted input line from the terminal cache
+  // fall back to currentInputCache if it's already midway through navigating history
+  let activeText = '';
+  
+  // If your xterm instance tracks the buffer line, or we use our fallback cache:
+  if (historyIndex.value === -1) {
+    // If you want to dynamically pull what the user typed before clicking up,
+    // we use the local ref cache or fallback to an empty string to avoid clearing it.
+    activeText = currentInputCache.value || '';
+  }
+  
+  handleHistoryUp(activeText);
+};
 
 
 </script>
@@ -491,5 +527,49 @@ html, body {
   overflow: hidden;
   box-sizing: border-box;
 }
+
+/* -------------------------------------------------------------------------------- */
+/* HISTORY BUTTONS */
+/* -------------------------------------------------------------------------------- */
+
+.mobile-history-controls {
+  display: flex;
+  background-color: #171717;
+  border: 1px solid #262626;
+  border-radius: 6px;
+  overflow: hidden;
+  height: 28px; /* Slightly shorter than main action buttons to look nested */
+}
+
+.history-btn {
+  background: transparent;
+  border: none;
+  color: #a3a3a3;
+  font-size: 0.65rem;
+  width: 28px;
+  height: 100%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.history-btn:first-child {
+  border-right: 1px solid #262626;
+}
+
+.history-btn:active:not(:disabled) {
+  background-color: #262626;
+  color: #ffffff;
+}
+
+.history-btn:disabled {
+  color: #404040;
+  cursor: not-allowed;
+}
+
 </style>
 
