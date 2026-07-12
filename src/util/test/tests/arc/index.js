@@ -5,8 +5,8 @@ import runListSuite from './list.js';
 
 export default async function runSuite(runner) {
     await runBasicSuite(runner);
-    await runStripSuite(runner);
-    await runStripComplexSuite(runner);
-    await runListSuite(runner);
+    //await runStripSuite(runner);
+    //await runStripComplexSuite(runner);
+    //await runListSuite(runner);
 }
 

@@ -30,9 +30,9 @@ export default async function runSuite(runner) {
         const checkFile1Res = await fetch(`/api/fs/read?path=${encodeURIComponent(`${targetExtractDir}/note.txt`)}`);
         expect.equal(checkFile1Res.status, 200, 'Extracted file accessible at target destination folder root');
 
-        await fetch(`/api/fs/delete?path=${encodeURIComponent(sourceDir)}&recursive=true`, { method: 'DELETE' });
-        await fetch(`/api/fs/delete?path=${encodeURIComponent(targetExtractDir)}&recursive=true`, { method: 'DELETE' });
-        await fetch(`/api/fs/delete?path=${encodeURIComponent(archiveZipPath)}&recursive=false`, { method: 'DELETE' });
+        //await fetch(`/api/fs/delete?path=${encodeURIComponent(sourceDir)}&recursive=true`, { method: 'DELETE' });
+        //await fetch(`/api/fs/delete?path=${encodeURIComponent(targetExtractDir)}&recursive=true`, { method: 'DELETE' });
+        //await fetch(`/api/fs/delete?path=${encodeURIComponent(archiveZipPath)}&recursive=false`, { method: 'DELETE' });
     });
 }
 

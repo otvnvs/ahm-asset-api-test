@@ -1,44 +1,4 @@
 export default async function runSuite(runner) {
-  // --- SUB-SUITE A: Existing Native File System Lifecycle Tasks ---
-  await runner.describe('Native Sandbox Comprehensive Lifecycle', async (expect) => {
-    const tempDir = 'comprehensive_lifecycle_test';
-    const file1 = `${tempDir}/first_document.txt`;
-    const file2 = `${tempDir}/second_document.json`;
-
-    await fetch(`/api/fs/mkdir?path=${encodeURIComponent(tempDir)}&recursive=true`, { method: 'POST' });
-
-    // CLEAN STANDARD: Pass the text string directly into the body field
-    const content1 = 'Hello from the first file asset chunk';
-    const write1Res = await fetch(`/api/fs/write?path=${encodeURIComponent(file1)}`, {
-      method: 'POST',
-      body: content1 
-    });
-    expect.equal(write1Res.status, 200, 'POST /write commits file1 data successfully via standard body');
-
-    const read1Res = await fetch(`/api/fs/read?path=${encodeURIComponent(file1)}`);
-    if (read1Res.ok) {
-      const text1 = await read1Res.text();
-      expect.equal(text1, content1, 'File1 data validation integrity matches');
-    }
-
-    // CLEAN STANDARD: Pass the JSON configuration string directly into the body field
-    const content2 = JSON.stringify({ status: "active", index: 2 });
-    const write2Res = await fetch(`/api/fs/write?path=${encodeURIComponent(file2)}`, {
-      method: 'POST',
-      body: content2 
-    });
-    expect.equal(write2Res.status, 200, 'POST /write commits file2 json payload successfully via standard body');
-
-    const read2Res = await fetch(`/api/fs/read?path=${encodeURIComponent(file2)}`);
-    if (read2Res.ok) {
-      const text2 = await read2Res.text();
-      expect.equal(text2, content2, 'File2 data validation integrity matches');
-    }
-
-    // Clean up temporary testing directories
-    await fetch(`/api/fs/delete?path=${encodeURIComponent(tempDir)}&recursive=true`, { method: 'DELETE' });
-  });
-
 
   // --- NEW SUB-SUITE B: Automated Storage Block & Partition Diagnostics (Expanded Logging) ---
   await runner.describe('Android Disk Space Partition Verification', async (expect) => {
@@ -86,4 +46,58 @@ export default async function runSuite(runner) {
     expect.equal(typeof payload.secondary_partition.removable_sdcard_mounted, 'boolean', 'Secondary check variable matches true/false flag state');
     expect.log("=== END EXPLICIT BLOCK FOOTPRINT EXTRACTION SWEEP ===");
   });
+
+
+  // --- SUB-SUITE A: Existing Native File System Lifecycle Tasks ---
+  await runner.describe('Native Sandbox Comprehensive Lifecycle', async (expect) => {
+    const tempDir = 'comprehensive_lifecycle_test';
+    const file1 = `${tempDir}/first_document.txt`;
+    const file2 = `${tempDir}/second_document.json`;
+
+    await fetch(`/api/fs/mkdir?path=${encodeURIComponent(tempDir)}&recursive=true`, { method: 'POST' });
+
+    // CLEAN STANDARD: Pass the text string directly into the body field
+    const content1 = 'Hello from the first file asset chunk';
+    const write1Res = await fetch(`/api/fs/write?path=${encodeURIComponent(file1)}`, {
+      method: 'POST',
+      body: content1 
+    });
+    expect.equal(write1Res.status, 200, 'POST /write commits file1 data successfully via standard body');
+
+    const read1Res = await fetch(`/api/fs/read?path=${encodeURIComponent(file1)}`);
+    if (read1Res.ok) {
+      const text1 = await read1Res.text();
+      expect.equal(text1, content1, 'File1 data validation integrity matches');
+    }
+
+    // CLEAN STANDARD: Pass the JSON configuration string directly into the body field
+    const content2 = JSON.stringify({ status: "active", index: 2 });
+    const write2Res = await fetch(`/api/fs/write?path=${encodeURIComponent(file2)}`, {
+      method: 'POST',
+      body: content2 
+    });
+    expect.equal(write2Res.status, 200, 'POST /write commits file2 json payload successfully via standard body');
+
+    const read2Res = await fetch(`/api/fs/read?path=${encodeURIComponent(file2)}`);
+    if (read2Res.ok) {
+      const text2 = await read2Res.text();
+      expect.equal(text2, content2, 'File2 data validation integrity matches');
+    }
+
+    // Clean up temporary testing directories
+    await fetch(`/api/fs/delete?path=${encodeURIComponent(tempDir)}&recursive=true`, { method: 'DELETE' });
+  });
+
+  await runner.describe('Native Sandbox Comprehensive Lifecycle', async (expect) => {
+	// Append this right to the bottom of your runSuite execution tree:
+	expect.log("--- DYNAMIC PATH VERIFICATION DIAGNOSTICS ---");
+	const tempDir = 'comprehensive_lifecycle_test';
+	const locationResponse = await fetch('/api/fs/locations', { method: 'GET' });
+	if (locationResponse.ok) {
+	    const dataMap = await locationResponse.json();
+	    expect.log(`Active Storage Target Path Root: ${dataMap.locations.external_storage_root}`);
+	    expect.log(`Verify this folder contents manually: ${dataMap.locations.external_storage_root}/${tempDir}`);
+	}
+  })
+
 }
