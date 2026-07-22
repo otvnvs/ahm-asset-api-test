@@ -207,26 +207,25 @@
 //}
 //--------------------------------------------------------------------------------
 export default async function runSuite(runner) {
-  await runner.describe('Dynamic Native XSUAA BTP Authentication Suite', async (expect) => {
+  await runner.describe('Dynamic Native OIDC Authentication Intercept Suite', async (expect) => {
 
-    expect.log("Directing AppAuth core engine directly to target BTP XSUAA tenant...");
+    expect.log("Compiling precise operational pathways matching corporate architecture...");
 
     const configurationPayload = {
-      // 1. MUST use the long service client ID string from line 13 of your odata_config.json
-      clientId: "sb-xs-dd294042-e705-48c0-b45f-9008c7555078!b607334|xsuaa-abapcp-prod-us10!b1841",
+      // 1. MUST use the Corporate SAP CIS Client ID from your working auth_config.json
+      clientId: "172d5109-5d18-4952-b68e-ad8f3ccc44ce",
       
-      // XSUAA does not declare standard openid scopes by default
-      scope: "", 
+      scope: "openid profile email offline_access",
       
-      // 2. MUST tell XSUAA to use your approved mobile custom scheme redirect signature
+      // 2. MUST use the matching mobile custom deep-link scheme redirect URI 
       redirectUri: "com.decabase.androidcis://oauth2redirect",
 
-      // 3. Supply the precise BTP authentication endpoints from lines 10 & 11 of your config
-      authorizationEndpoint: "https://subaccount1." + "authentication.us10." + "hana.ondemand.com" + "/oauth/authorize",
-      tokenEndpoint: "https://subaccount1." + "authentication.us10." + "hana.ondemand.com" + "/oauth/token"
+      // 3. Point endpoints straight to your SAP CIS (IAS) tenant domains, NOT the BTP XSUAA asset endpoints
+      authorizationEndpoint: "https://aoqq6exiu." + "accounts.ondemand.com" + "/oauth2/authorize",
+      tokenEndpoint: "https://aoqq6exiu." + "accounts.ondemand.com" + "/oauth2/token"
     };
 
-    expect.log("Dispatching payload variables straight to microframework gateway entry...");
+    expect.log("Dispatching structured JSON configuration block to dynamic endpoint entry...");
 
     const response = await fetch('/api/oidc/login', {
       method: 'POST',
@@ -238,6 +237,7 @@ export default async function runSuite(runner) {
     });
 
     expect.equal(response.status, 200, 'POST /api/oidc/login processes parameters and returns 200 OK');
+
     const payload = await response.json();
     expect.equal(payload.status, 'success', 'Native engine maps runtime signatures successfully');
   });
