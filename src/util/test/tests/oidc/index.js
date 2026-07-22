@@ -38,25 +38,61 @@
 //  });
 //}
 //--------------------------------------------------------------------------------
+//export default async function runSuite(runner) {
+//  await runner.describe('Dynamic Native OIDC Authentication Intercept Suite', async (expect) => {
+//    
+//    expect.log("Compiling precise live corporate endpoint pathways layout parameters...");
+//    
+//    // Injecting the absolute routing paths derived straight from your working reference specifications
+//    const configurationPayload = {
+//      clientId: "sb-xs-dd294042-e705-48c0-b45f-9008c7555078!b607334|xsuaa-abapcp-prod-us10!b1841",
+//      scope: "", 
+//      redirectUri: "com.decabase.androidcis://oauth2redirect",
+//      
+//      // MANDATORY RULE: Append the concrete engine routes onto your BTP tenant domains
+//      authorizationEndpoint: "https://subaccount1.authentication.us10.hana.ondemand.com/oauth/authorize",
+//      tokenEndpoint: "https://subaccount1.authentication.us10.hana.ondemand.com/oauth/token"
+//    };
+//
+//    expect.log("Dispatching structured JSON configuration block to dynamic endpoint entry...");
+//
+//    const response = await fetch('/api/oidc/login', { 
+//      method: 'POST',
+//      headers: {
+//        'Accept': 'application/json',
+//        'Content-Type': 'application/json'
+//      },
+//      body: JSON.stringify(configurationPayload)
+//    });
+//    
+//    expect.equal(response.status, 200, 'POST /api/oidc/login processes parameters and returns 200 OK');
+//    
+//    const payload = await response.json();
+//    expect.equal(payload.status, 'success', 'Native engine maps runtime signatures successfully');
+//  });
+//}
+//--------------------------------------------------------------------------------
 export default async function runSuite(runner) {
   await runner.describe('Dynamic Native OIDC Authentication Intercept Suite', async (expect) => {
-    
+
     expect.log("Compiling precise live corporate endpoint pathways layout parameters...");
-    
-    // Injecting the absolute routing paths derived straight from your working reference specifications
+
+    // Pointing strictly to your SAP CIS (IAS) environment configurations
     const configurationPayload = {
-      clientId: "sb-xs-dd294042-e705-48c0-b45f-9008c7555078!b607334|xsuaa-abapcp-prod-us10!b1841",
-      scope: "", 
-      redirectUri: "com.decabase.androidcis://oauth2redirect",
+      // 1. Use your SAP CIS Client ID from your auth_config.json snippet
+      clientId: "172d5109-5d18-4952-b68e-ad8f3ccc44ce",
       
-      // MANDATORY RULE: Append the concrete engine routes onto your BTP tenant domains
+      // 2. Supply standard openid scopes required by SAP CIS
+      scope: "openid profile email offline_access",
+      
+      // 3. Point your endpoint strings directly to your SAP CIS tenant domain routes
       authorizationEndpoint: "https://subaccount1.authentication.us10.hana.ondemand.com/oauth/authorize",
       tokenEndpoint: "https://subaccount1.authentication.us10.hana.ondemand.com/oauth/token"
     };
 
     expect.log("Dispatching structured JSON configuration block to dynamic endpoint entry...");
 
-    const response = await fetch('/api/oidc/login', { 
+    const response = await fetch('/api/oidc/login', {
       method: 'POST',
       headers: {
         'Accept': 'application/json',
@@ -64,9 +100,9 @@ export default async function runSuite(runner) {
       },
       body: JSON.stringify(configurationPayload)
     });
-    
+
     expect.equal(response.status, 200, 'POST /api/oidc/login processes parameters and returns 200 OK');
-    
+
     const payload = await response.json();
     expect.equal(payload.status, 'success', 'Native engine maps runtime signatures successfully');
   });
