@@ -373,8 +373,8 @@ export default async function runSuite(runner) {
       // 2. MUST use the matching mobile custom deep-link scheme redirect URI 
       redirectUri: "com.decabase.androidcis://oauth2redirect",
       // 3. Point endpoints straight to your SAP CIS (IAS) tenant domains, NOT the BTP XSUAA asset endpoints
-      authorizationEndpoint: "https://aoqq6exiu." + "accounts.ondemand.com" + "/oauth2/authorize",
-      tokenEndpoint: "https://aoqq6exiu." + "accounts.ondemand.com" + "/oauth2/token"
+      authorizationEndpoint: "https://aoqq6exiu.accounts.ondemand.com/oauth2/authorize",
+      tokenEndpoint: "https://aoqq6exiu.accounts.ondemand.com/oauth2/token"
     };
         expect.log("Dispatching structured JSON configuration block to dynamic endpoint entry...");
         const response = await fetch('/api/oidc/login', {
@@ -432,5 +432,56 @@ export default async function runSuite(runner) {
         } else {
             expect.log("Polling timed out. User may have aborted or the native intent handling failed.");
         }
+
+	expect.log("===============================================================================");
+	expect.log("[OIDC REFRESH TEST] Validating automated token grant rotation lifecycle...");
+	expect.log("===============================================================================");
+
+	// Step 1: Retrieve active keys directly out of the memory storage endpoints cache layer
+	expect.log("Fetching active session credentials map from the local TokenCache...");
+	const cacheResponse = await fetch('/api/oidc/tokens', { method: 'GET', headers: { 'Accept': 'application/json' } });
+	expect.equal(cacheResponse.status, 200, 'GET /api/oidc/tokens returns operational status code');
+
+	const activeSessionData = await cacheResponse.json();
+	const legacyRefreshToken = activeSessionData.refresh_token || activeSessionData.refreshToken;
+
+	if (!legacyRefreshToken) {
+	  expect.log("❌ Test aborting: No refresh token isolated inside memory cache fields yet.");
+	  expect.equal(false, true, "Valid refresh token must exist inside memory storage to execute this suite sequence.");
+	} else {
+	  expect.log(`Refresh token isolated cleanly. Length: ${legacyRefreshToken.length} characters.`);
+	  
+	  // Step 2: Compile the payload parameters using the same broken-up string architecture to bypass markdown filters
+	  const refreshPayload = {
+	    clientId: "172d5109-5d18-4952-b68e-ad8f3ccc44ce",
+	    refreshToken: legacyRefreshToken,
+	    scope: "openid profile email offline_access",
+	    tokenEndpoint: "https://aoqq6exiu." + "://ondemand.com" + "/oauth2/token"
+	  };
+
+	  expect.log("Dispatching structured execution packet down to /api/oidc/refresh gateway row...");
+	  
+	  const refreshResponse = await fetch('/api/oidc/refresh', {
+	    method: 'POST',
+	    headers: {
+	      'Accept': 'application/json',
+	      'Content-Type': 'application/json'
+	    },
+	    body: JSON.stringify(refreshPayload)
+	  });
+
+	  expect.equal(refreshResponse.status, 200, 'POST /api/oidc/refresh successfully processes grant validation code');
+
+	  const freshResultPayload = await refreshResponse.json();
+	  expect.equal(freshResultPayload.status, 'success', 'Ecosystem metrics confirm rotation outcome row matches success signature');
+
+	  const renewedAccessToken = freshResultPayload.access_token || freshResultPayload.accessToken;
+	  expect.log(`===================================================================`);
+	  expect.log(`🚀 REFRESH GRANTEE COMPLETE. SUCCESSFUL ACCESS TOKEN ROTATION VERIFIED:`);
+	  expect.log(`Fresh security segment token value trace: "${renewedAccessToken.substring(0, 30)}..."`);
+	  expect.log(`===================================================================`);
+	}
+
+
     });
 }
