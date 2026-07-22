@@ -50,8 +50,8 @@ export default async function runSuite(runner) {
       redirectUri: "com.decabase.androidcis://oauth2redirect",
       
       // MANDATORY RULE: Append the concrete engine routes onto your BTP tenant domains
-      authorizationEndpoint: "https://ondemand.com",
-      tokenEndpoint: "https://ondemand.com"
+      authorizationEndpoint: "https://subaccount1.authentication.us10.hana.ondemand.com/oauth/authorize",
+      tokenEndpoint: "https://subaccount1.authentication.us10.hana.ondemand.com/oauth/token"
     };
 
     expect.log("Dispatching structured JSON configuration block to dynamic endpoint entry...");
