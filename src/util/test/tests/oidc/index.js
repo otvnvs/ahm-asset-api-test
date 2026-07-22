@@ -351,16 +351,33 @@ export default async function runSuite(runner) {
     });
 
     // Local decoding helper to evaluate JWT expiration timestamps cleanly without breaking string loops
+    // Local decoding helper to evaluate JWT expiration timestamps cleanly
     const isTokenChronologicallyValid = (tokenStr) => {
       if (!tokenStr) return false;
       try {
         const structuralParts = tokenStr.split('.');
         if (structuralParts.length < 2) return false;
+        
+        // Unpack Base64URL string mapping segment
         const decodedPayload = JSON.parse(atob(structuralParts[1].replace(/-/g, '+').replace(/_/g, '/')));
         const currentUnixEpochSec = Math.floor(Date.now() / 1000);
         const clockSafetyBufferSec = 60; // 1-minute preemptive refresh buffer
-        return decodedPayload.exp && (currentUnixEpochSec + clockSafetyBufferSec) < decodedPayload.exp;
+        
+        if (decodedPayload.exp) {
+          const secondsRemaining = decodedPayload.exp - currentUnixEpochSec;
+          const minutesRemaining = (secondsRemaining / 60).toFixed(2);
+          
+          if (secondsRemaining > clockSafetyBufferSec) {
+            expect.log(`[TOKEN LIFECYCLE INFO]: Cached token string is STILL VALID for another ${secondsRemaining}s (~${minutesRemaining} minutes).`);
+            return true;
+          } else {
+            expect.log(`[TOKEN LIFECYCLE INFO]: Cached token string is EXPIRED or within the ${clockSafetyBufferSec}s safety buffer boundary window.`);
+            return false;
+          }
+        }
+        return false;
       } catch (e) {
+        expect.log(`[TOKEN LIFECYCLE INFO]: Failed parsing token expiration timestamp claims structure: ${e.message}`);
         return false;
       }
     };
