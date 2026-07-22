@@ -176,7 +176,7 @@ export default async function runSuite(runner) {
     const configurationPayload = {
 	    redirectUri: "https://aoqq6exiu.accounts.ondemand.com",
       // 1. Use the Microsoft Application Client ID seen in your address trace
-      clientId: "d0975a5a-8001-4010-937d-30d86f06c16a",
+      clientId: "172d5109-5d18-4952-b68e-ad8f3ccc44ce",
       
       // 2. Pass standard OpenID connect scope arguments
       scope: "openid profile email offline_access",
