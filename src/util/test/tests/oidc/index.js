@@ -134,20 +134,55 @@
 //  });
 //}
 //--------------------------------------------------------------------------------
+//export default async function runSuite(runner) {
+//  await runner.describe('Dynamic Native OIDC Authentication Intercept Suite', async (expect) => {
+//
+//    expect.log("Compiling precise live corporate endpoint pathways layout parameters...");
+//
+//    // Aligning options to completely mask intermediate choosing operations
+//    const configurationPayload = {
+//      clientId: "172d5109-5d18-4952-b68e-ad8f3ccc44ce",
+//      scope: "openid profile email offline_access",
+//      authorizationEndpoint: "https://subaccount1.authentication.us10.hana.ondemand.com/oauth/authorize",
+//      tokenEndpoint: "https://subaccount1.authentication.us10.hana.ondemand.com/oauth/token",
+//      
+//      // INJECT THE IDP HINT: This value tells SAP CIS to directly forward the session to Microsoft online
+//      idpHint: "Entra ID"
+//    };
+//
+//    expect.log("Dispatching structured JSON configuration block to dynamic endpoint entry...");
+//
+//    const response = await fetch('/api/oidc/login', {
+//      method: 'POST',
+//      headers: {
+//        'Accept': 'application/json',
+//        'Content-Type': 'application/json'
+//      },
+//      body: JSON.stringify(configurationPayload)
+//    });
+//
+//    expect.equal(response.status, 200, 'POST /api/oidc/login processes parameters and returns 200 OK');
+//
+//    const payload = await response.json();
+//    expect.equal(payload.status, 'success', 'Native engine maps runtime signatures successfully');
+//  });
+//}
+//--------------------------------------------------------------------------------
 export default async function runSuite(runner) {
   await runner.describe('Dynamic Native OIDC Authentication Intercept Suite', async (expect) => {
 
-    expect.log("Compiling precise live corporate endpoint pathways layout parameters...");
+    expect.log("Routing directly to Microsoft Entra ID infrastructure endpoints...");
 
-    // Aligning options to completely mask intermediate choosing operations
     const configurationPayload = {
-      clientId: "172d5109-5d18-4952-b68e-ad8f3ccc44ce",
-      scope: "openid profile email offline_access",
-      authorizationEndpoint: "https://subaccount1.authentication.us10.hana.ondemand.com/oauth/authorize",
-      tokenEndpoint: "https://subaccount1.authentication.us10.hana.ondemand.com/oauth/token",
+      // 1. Use the Microsoft Application Client ID seen in your address trace
+      clientId: "d0975a5a-8001-4010-937d-30d86f06c16a",
       
-      // INJECT THE IDP HINT: This value tells SAP CIS to directly forward the session to Microsoft online
-      idpHint: "Entra ID"
+      // 2. Pass standard OpenID connect scope arguments
+      scope: "openid profile email offline_access",
+
+      // 3. Set the authorization and token endpoints straight to Microsoft Online Tenant routes
+      authorizationEndpoint: "https://microsoftonline.com",
+      tokenEndpoint: "https://microsoftonline.com"
     };
 
     expect.log("Dispatching structured JSON configuration block to dynamic endpoint entry...");
@@ -167,4 +202,5 @@ export default async function runSuite(runner) {
     expect.equal(payload.status, 'success', 'Native engine maps runtime signatures successfully');
   });
 }
+
 
