@@ -492,7 +492,7 @@ export default async function runSuite(runner) {
       tokenEndpoint: clientConfiguration.tokenEndpoint
     };
 
-    refreshResponse = await fetch('/api/oidc/refresh', {
+    const refreshResponse = await fetch('/api/oidc/refresh', {
       method: 'POST',
       headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
       body: JSON.stringify(refreshPayload)
