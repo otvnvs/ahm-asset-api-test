@@ -174,6 +174,7 @@ export default async function runSuite(runner) {
     expect.log("Routing directly to Microsoft Entra ID infrastructure endpoints...");
 
     const configurationPayload = {
+	    redirectUri: "https://aoqq6exiu.accounts.ondemand.com",
       // 1. Use the Microsoft Application Client ID seen in your address trace
       clientId: "d0975a5a-8001-4010-937d-30d86f06c16a",
       
