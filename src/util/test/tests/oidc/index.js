@@ -99,21 +99,55 @@
 //  });
 //}
 //--------------------------------------------------------------------------------
+//export default async function runSuite(runner) {
+//  await runner.describe('Dynamic Native OIDC Authentication Intercept Suite', async (expect) => {
+//
+//    expect.log("Compiling precise live corporate endpoint pathways layout parameters...");
+//
+//    // To skip the SAP menu and go straight to Microsoft, pair the CIS Client ID with the CIS Tenant endpoints
+//    const configurationPayload = {
+//      // 1. MUST use the specific SAP CIS Client ID string from your auth_config.json
+//      clientId: "172d5109-5d18-4952-b68e-ad8f3ccc44ce",
+//      
+//      scope: "openid profile email offline_access",
+//
+//      // 2. MUST route to the precise SAP CIS authorization and token pathways, NOT the BTP XSUAA tenant urls
+//      authorizationEndpoint: "https://subaccount1.authentication.us10.hana.ondemand.com/oauth/authorize",
+//      tokenEndpoint: "https://subaccount1.authentication.us10.hana.ondemand.com/oauth/token"
+//    };
+//
+//    expect.log("Dispatching structured JSON configuration block to dynamic endpoint entry...");
+//
+//    const response = await fetch('/api/oidc/login', {
+//      method: 'POST',
+//      headers: {
+//        'Accept': 'application/json',
+//        'Content-Type': 'application/json'
+//      },
+//      body: JSON.stringify(configurationPayload)
+//    });
+//
+//    expect.equal(response.status, 200, 'POST /api/oidc/login processes parameters and returns 200 OK');
+//
+//    const payload = await response.json();
+//    expect.equal(payload.status, 'success', 'Native engine maps runtime signatures successfully');
+//  });
+//}
+//--------------------------------------------------------------------------------
 export default async function runSuite(runner) {
   await runner.describe('Dynamic Native OIDC Authentication Intercept Suite', async (expect) => {
 
     expect.log("Compiling precise live corporate endpoint pathways layout parameters...");
 
-    // To skip the SAP menu and go straight to Microsoft, pair the CIS Client ID with the CIS Tenant endpoints
+    // Aligning options to completely mask intermediate choosing operations
     const configurationPayload = {
-      // 1. MUST use the specific SAP CIS Client ID string from your auth_config.json
       clientId: "172d5109-5d18-4952-b68e-ad8f3ccc44ce",
-      
       scope: "openid profile email offline_access",
-
-      // 2. MUST route to the precise SAP CIS authorization and token pathways, NOT the BTP XSUAA tenant urls
       authorizationEndpoint: "https://subaccount1.authentication.us10.hana.ondemand.com/oauth/authorize",
-      tokenEndpoint: "https://subaccount1.authentication.us10.hana.ondemand.com/oauth/token"
+      tokenEndpoint: "https://subaccount1.authentication.us10.hana.ondemand.com/oauth/token",
+      
+      // INJECT THE IDP HINT: This value tells SAP CIS to directly forward the session to Microsoft online
+      idpHint: "Entra ID"
     };
 
     expect.log("Dispatching structured JSON configuration block to dynamic endpoint entry...");
@@ -133,5 +167,4 @@ export default async function runSuite(runner) {
     expect.equal(payload.status, 'success', 'Native engine maps runtime signatures successfully');
   });
 }
-
 
