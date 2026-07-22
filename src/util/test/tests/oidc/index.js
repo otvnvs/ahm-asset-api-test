@@ -168,27 +168,65 @@
 //  });
 //}
 //--------------------------------------------------------------------------------
+//export default async function runSuite(runner) {
+//  await runner.describe('Dynamic Native OIDC Authentication Intercept Suite', async (expect) => {
+//
+//    expect.log("Routing directly to Microsoft Entra ID infrastructure endpoints...");
+//
+//    const configurationPayload = {
+//      redirectUri: "https://aoqq6exiu.accounts.ondemand.com/oauth2/callback",
+//      // 1. Use the Microsoft Application Client ID seen in your address trace
+//      clientId: "d0975a5a-8001-4010-937d-30d86f06c16a",
+//      
+//      //clientId: "172d5109-5d18-4952-b68e-ad8f3ccc44ce",
+//      // 2. Pass standard OpenID connect scope arguments
+//      scope: "openid profile email offline_access",
+//
+//      // 3. Set the authorization and token endpoints straight to Microsoft Online Tenant routes
+//      authorizationEndpoint: "https://login." + "microsoftonline.com" + "/54cb6a8a-6abe-4369-ab70-66f749d399f7/" + "oauth2/v2.0/authorize",
+//      tokenEndpoint: "https://login." + "microsoftonline.com" + "/54cb6a8a-6abe-4369-ab70-66f749d399f7/" + "oauth2/v2.0/token"
+//
+//    };
+//
+//    expect.log("Dispatching structured JSON configuration block to dynamic endpoint entry...");
+//
+//    const response = await fetch('/api/oidc/login', {
+//      method: 'POST',
+//      headers: {
+//        'Accept': 'application/json',
+//        'Content-Type': 'application/json'
+//      },
+//      body: JSON.stringify(configurationPayload)
+//    });
+//
+//    expect.equal(response.status, 200, 'POST /api/oidc/login processes parameters and returns 200 OK');
+//
+//    const payload = await response.json();
+//    expect.equal(payload.status, 'success', 'Native engine maps runtime signatures successfully');
+//  });
+//}
+//--------------------------------------------------------------------------------
 export default async function runSuite(runner) {
-  await runner.describe('Dynamic Native OIDC Authentication Intercept Suite', async (expect) => {
+  await runner.describe('Dynamic Native XSUAA BTP Authentication Suite', async (expect) => {
 
-    expect.log("Routing directly to Microsoft Entra ID infrastructure endpoints...");
+    expect.log("Directing AppAuth core engine directly to target BTP XSUAA tenant...");
 
     const configurationPayload = {
-      redirectUri: "https://aoqq6exiu.accounts.ondemand.com/oauth2/callback",
-      // 1. Use the Microsoft Application Client ID seen in your address trace
-      clientId: "d0975a5a-8001-4010-937d-30d86f06c16a",
+      // 1. MUST use the long service client ID string from line 13 of your odata_config.json
+      clientId: "sb-xs-dd294042-e705-48c0-b45f-9008c7555078!b607334|xsuaa-abapcp-prod-us10!b1841",
       
-      //clientId: "172d5109-5d18-4952-b68e-ad8f3ccc44ce",
-      // 2. Pass standard OpenID connect scope arguments
-      scope: "openid profile email offline_access",
+      // XSUAA does not declare standard openid scopes by default
+      scope: "", 
+      
+      // 2. MUST tell XSUAA to use your approved mobile custom scheme redirect signature
+      redirectUri: "com.decabase.androidcis://oauth2redirect",
 
-      // 3. Set the authorization and token endpoints straight to Microsoft Online Tenant routes
-      authorizationEndpoint: "https://login." + "microsoftonline.com" + "/54cb6a8a-6abe-4369-ab70-66f749d399f7/" + "oauth2/v2.0/authorize",
-      tokenEndpoint: "https://login." + "microsoftonline.com" + "/54cb6a8a-6abe-4369-ab70-66f749d399f7/" + "oauth2/v2.0/token"
-
+      // 3. Supply the precise BTP authentication endpoints from lines 10 & 11 of your config
+      authorizationEndpoint: "https://subaccount1." + "authentication.us10." + "hana.ondemand.com" + "/oauth/authorize",
+      tokenEndpoint: "https://subaccount1." + "authentication.us10." + "hana.ondemand.com" + "/oauth/token"
     };
 
-    expect.log("Dispatching structured JSON configuration block to dynamic endpoint entry...");
+    expect.log("Dispatching payload variables straight to microframework gateway entry...");
 
     const response = await fetch('/api/oidc/login', {
       method: 'POST',
@@ -200,10 +238,8 @@ export default async function runSuite(runner) {
     });
 
     expect.equal(response.status, 200, 'POST /api/oidc/login processes parameters and returns 200 OK');
-
     const payload = await response.json();
     expect.equal(payload.status, 'success', 'Native engine maps runtime signatures successfully');
   });
 }
-
 
