@@ -456,7 +456,8 @@ export default async function runSuite(runner) {
 	    clientId: "172d5109-5d18-4952-b68e-ad8f3ccc44ce",
 	    refreshToken: legacyRefreshToken,
 	    scope: "openid profile email offline_access",
-	    tokenEndpoint: "https://aoqq6exiu." + "://ondemand.com" + "/oauth2/token"
+            tokenEndpoint: "https://aoqq6exiu.accounts.ondemand.com/oauth2/token"
+
 	  };
 
 	  expect.log("Dispatching structured execution packet down to /api/oidc/refresh gateway row...");
