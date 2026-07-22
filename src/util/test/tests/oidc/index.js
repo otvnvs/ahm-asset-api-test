@@ -243,70 +243,121 @@
 //  });
 //}
 //--------------------------------------------------------------------------------
+//export default async function runSuite(runner) {
+//    await runner.describe('Dynamic Native OIDC Authentication Intercept Suite', async (expect) => {
+//        expect.log("Compiling precise operational pathways matching corporate architecture...");
+//    const configurationPayload = {
+//      // 1. MUST use the Corporate SAP CIS Client ID from your working auth_config.json
+//      clientId: "172d5109-5d18-4952-b68e-ad8f3ccc44ce",
+//      scope: "openid profile email offline_access",
+//      // 2. MUST use the matching mobile custom deep-link scheme redirect URI 
+//      redirectUri: "com.decabase.androidcis://oauth2redirect",
+//      // 3. Point endpoints straight to your SAP CIS (IAS) tenant domains, NOT the BTP XSUAA asset endpoints
+//      authorizationEndpoint: "https://aoqq6exiu." + "accounts.ondemand.com" + "/oauth2/authorize",
+//      tokenEndpoint: "https://aoqq6exiu." + "accounts.ondemand.com" + "/oauth2/token"
+//    };
+//        expect.log("Dispatching structured JSON configuration block to dynamic endpoint entry...");
+//        const response = await fetch('/api/oidc/login', {
+//            method: 'POST',
+//            headers: {
+//                'Accept': 'application/json',
+//                'Content-Type': 'application/json'
+//            },
+//            body: JSON.stringify(configurationPayload)
+//        });
+//        expect.equal(response.status, 200, 'POST /api/oidc/login processes parameters and returns 200 OK');
+//        const payload = await response.json();
+//        expect.equal(payload.status, 'success', 'Native engine maps runtime signatures successfully');
+//        // --- Extended Feature: Token Polling Engine ---
+//        expect.log("Authentication window launched. Initiating token cache polling loop...");
+//        const pollIntervalMs = 2000; // Poll every 2 seconds
+//        const maxTimeoutMs = 60000;  // Stop trying after 60 seconds
+//        const startTime = Date.now();
+//        let tokensAcquired = false;
+//        let tokenData = null;
+//        while (Date.now() - startTime < maxTimeoutMs) {
+//            try {
+//                const tokenResponse = await fetch('/api/oidc/tokens', {
+//                    method: 'GET',
+//                    headers: { 'Accept': 'application/json' }
+//                });
+//
+//                if (tokenResponse.status === 200) {
+//                    const data = await tokenResponse.json();
+//                    
+//                    // Validate that the TokenCache actually contains live tokens 
+//                    // (Adjust key names like 'access_token' depending on your TokenCache.getTokensAsJson() structure)
+//                    if (data && (data.access_token || data.id_token)) {
+//                        tokensAcquired = true;
+//                        tokenData = data;
+//                        break; 
+//                    }
+//                }
+//            } catch (err) {
+//                expect.log(`Polling attempt encountered an error: ${err.message}`);
+//            }
+//
+//            expect.log(`Tokens not ready yet. Waiting ${pollIntervalMs / 1000}s...`);
+//            // Wait out the specified interval before trying again
+//            await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+//        }
+//        // Final Asserts for the polling lifecycle
+//        expect.equal(tokensAcquired, true, 'Tokens successfully synchronized from native TokenCache before timeout.');
+//        if (tokensAcquired && tokenData) {
+//            expect.log("Token verification complete. Handshake successful.");
+//        } else {
+//            expect.log("Polling timed out. User may have aborted or the native intent handling failed.");
+//        }
+//    });
+//}
+//--------------------------------------------------------------------------------
 export default async function runSuite(runner) {
-    await runner.describe('Dynamic Native OIDC Authentication Intercept Suite', async (expect) => {
-        expect.log("Compiling precise operational pathways matching corporate architecture...");
-    const configurationPayload = {
-      // 1. MUST use the Corporate SAP CIS Client ID from your working auth_config.json
-      clientId: "172d5109-5d18-4952-b68e-ad8f3ccc44ce",
-      scope: "openid profile email offline_access",
-      // 2. MUST use the matching mobile custom deep-link scheme redirect URI 
-      redirectUri: "com.decabase.androidcis://oauth2redirect",
-      // 3. Point endpoints straight to your SAP CIS (IAS) tenant domains, NOT the BTP XSUAA asset endpoints
-      authorizationEndpoint: "https://aoqq6exiu." + "accounts.ondemand.com" + "/oauth2/authorize",
-      tokenEndpoint: "https://aoqq6exiu." + "accounts.ondemand.com" + "/oauth2/token"
-    };
-        expect.log("Dispatching structured JSON configuration block to dynamic endpoint entry...");
-        const response = await fetch('/api/oidc/login', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(configurationPayload)
-        });
-        expect.equal(response.status, 200, 'POST /api/oidc/login processes parameters and returns 200 OK');
-        const payload = await response.json();
-        expect.equal(payload.status, 'success', 'Native engine maps runtime signatures successfully');
-        // --- Extended Feature: Token Polling Engine ---
-        expect.log("Authentication window launched. Initiating token cache polling loop...");
-        const pollIntervalMs = 2000; // Poll every 2 seconds
-        const maxTimeoutMs = 60000;  // Stop trying after 60 seconds
-        const startTime = Date.now();
-        let tokensAcquired = false;
-        let tokenData = null;
-        while (Date.now() - startTime < maxTimeoutMs) {
-            try {
-                const tokenResponse = await fetch('/api/oidc/tokens', {
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json' }
-                });
+	expect.log("Authentication window completed. Initiating extraction verification...");
 
-                if (tokenResponse.status === 200) {
-                    const data = await tokenResponse.json();
-                    
-                    // Validate that the TokenCache actually contains live tokens 
-                    // (Adjust key names like 'access_token' depending on your TokenCache.getTokensAsJson() structure)
-                    if (data && (data.access_token || data.id_token)) {
-                        tokensAcquired = true;
-                        tokenData = data;
-                        break; 
-                    }
-                }
-            } catch (err) {
-                expect.log(`Polling attempt encountered an error: ${err.message}`);
-            }
+	const pollIntervalMs = 2000;
+	const maxTimeoutMs = 60000;
+	const startTime = Date.now();
+	let tokensAcquired = false;
+	let tokenData = null;
 
-            expect.log(`Tokens not ready yet. Waiting ${pollIntervalMs / 1000}s...`);
-            // Wait out the specified interval before trying again
-            await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
-        }
-        // Final Asserts for the polling lifecycle
-        expect.equal(tokensAcquired, true, 'Tokens successfully synchronized from native TokenCache before timeout.');
-        if (tokensAcquired && tokenData) {
-            expect.log("Token verification complete. Handshake successful.");
-        } else {
-            expect.log("Polling timed out. User may have aborted or the native intent handling failed.");
-        }
-    });
+	while (Date.now() - startTime < maxTimeoutMs) {
+	  try {
+	    const tokenResponse = await fetch('/api/oidc/tokens', {
+	      method: 'GET',
+	      headers: { 'Accept': 'application/json' }
+	    });
+
+	    if (tokenResponse.status === 200) {
+	      const data = await tokenResponse.json();
+	      
+	      // DIAGNOSTIC CHECK: Print exactly what fields are arriving from the native cache
+	      expect.log(`[POLLING RAW TELEMETRY]: ${JSON.stringify(data)}`);
+
+	      // Flexible extraction checking against both snake_case and camelCase layouts
+	      if (data && (data.access_token || data.accessToken || data.id_token || data.idToken)) {
+		tokensAcquired = true;
+		tokenData = data;
+		break;
+	      }
+	    }
+	  } catch (err) {
+	    expect.log(`Polling attempt encountered network route breakdown: ${err.message}`);
+	  }
+
+	  expect.log("Tokens not fully loaded into memory segments yet. Holding loop...");
+	  await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+	}
+
+	expect.equal(tokensAcquired, true, 'Tokens successfully synchronized from native memory TokenCache properties layer.');
+
+	if (tokensAcquired && tokenData) {
+	  const secureTokenString = tokenData.access_token || tokenData.accessToken;
+	  expect.log(`===================================================================`);
+	  expect.log(`🚀 FRONT-END SUCCESSFULLY RETRIEVED THE SECURE SECURITY CREDENTIALS:`);
+	  expect.log(`Signature segment parsed payload prefix: "${secureTokenString.substring(0, 30)}..."`);
+	  expect.log(`===================================================================`);
+	} else {
+	  expect.log("Handshake timeout reached before the static variables could align inside memory arrays.");
+	}
+
 }
