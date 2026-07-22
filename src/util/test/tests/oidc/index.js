@@ -312,6 +312,7 @@
 //}
 //--------------------------------------------------------------------------------
 export default async function runSuite(runner) {
+    await runner.describe('Dynamic Native OIDC Authentication Intercept Suite', async (expect) => {
 	expect.log("Authentication window completed. Initiating extraction verification...");
 
 	const pollIntervalMs = 2000;
@@ -359,5 +360,5 @@ export default async function runSuite(runner) {
 	} else {
 	  expect.log("Handshake timeout reached before the static variables could align inside memory arrays.");
 	}
-
+    });
 }
