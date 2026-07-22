@@ -181,8 +181,8 @@ export default async function runSuite(runner) {
       scope: "openid profile email offline_access",
 
       // 3. Set the authorization and token endpoints straight to Microsoft Online Tenant routes
-      authorizationEndpoint: "https://login." + "microsoftonline.com" + "54cb6a8a-6abe-4369-ab70-66f749d399f7/" + "oauth2/v2.0/authorize",
-      tokenEndpoint: "https://login." + "microsoftonline.com" + "54cb6a8a-6abe-4369-ab70-66f749d399f7/" + "oauth2/v2.0/token"
+      authorizationEndpoint: "https://login." + "microsoftonline.com" + "/54cb6a8a-6abe-4369-ab70-66f749d399f7/" + "oauth2/v2.0/authorize",
+      tokenEndpoint: "https://login." + "microsoftonline.com" + "/54cb6a8a-6abe-4369-ab70-66f749d399f7/" + "oauth2/v2.0/token"
 
     };
 
